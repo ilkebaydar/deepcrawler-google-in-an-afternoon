@@ -2,7 +2,16 @@
 
 A lightweight web crawler and full-text search engine built **entirely with Python's standard library** — no external frameworks, no third-party parsers.
 
-This was built as part of the *"Google in One Day"* project for **ITU AI Aided Computer Engineering**.
+This project was developed for the **ITU AI Aided Computer Engineering** course, specifically for the *"Google in an Afternoon"* assignment, instructed by **Asst. Prof. Dr. Yusuf Hüseyin Şahin**. The system's architecture and design choices were additionally informed by industry insights provided by guest speaker **David Doğukan Erenel**.
+
+---
+
+## Built With
+
+To accelerate development and ensure a robust architecture, the following tools and AI models were utilized during the creation of this project:
+* **Antigravity** — Primary IDE / Development Environment
+* **Gemini 3.1 Pro** — Architecture planning, system design, and optimization
+* **Claude Sonnet 4.6** — Advanced logic implementation and code refinement
 
 ---
 
@@ -32,21 +41,20 @@ All of this happens through a local web dashboard you open in your browser.
 
 ## Project Structure
 
-```
-crawler/
-├── main.py           # HTTP server & API routing — the control center
-├── crawler.py        # Crawl engine: threading, lifecycle control, queue persistence
-├── searcher.py       # Read-only search engine: ranking, pagination, autocomplete
-├── file_manager.py   # Thread-safe disk I/O: shard writes, atomic job log updates
-├── templates/
-│   └── index.html    # Dashboard UI — vanilla HTML/CSS/JS, no frameworks
-├── storage/          # Sharded word index (a.data, b.data, …)
-│                     #   Each line: { word, current_url, origin_url, depth, frequency }
-├── logs/             # One JSON log file per crawler job
-│                     #   Stores: status, counters, events, queue snapshot, visited snapshot
-├── product_prd.md    # Full product requirements document
-└── .gitignore
-```
+    crawler/
+    ├── main.py           # HTTP server & API routing — the control center
+    ├── crawler.py        # Crawl engine: threading, lifecycle control, queue persistence
+    ├── searcher.py       # Read-only search engine: ranking, pagination, autocomplete
+    ├── file_manager.py   # Thread-safe disk I/O: shard writes, atomic job log updates
+    ├── templates/
+    │   └── index.html    # Dashboard UI — vanilla HTML/CSS/JS, no frameworks
+    ├── storage/          # Sharded word index (a.data, b.data, …)
+    │                     #   Each line: { word, current_url, origin_url, depth, frequency }
+    ├── logs/             # One JSON log file per crawler job
+    │                     #   Stores: status, counters, events, queue snapshot, visited snapshot
+    ├── product_prd.md    # Full product requirements document
+    ├── recommendation.md # Future scaling and Phase 2 architecture recommendations
+    └── .gitignore
 
 ---
 
@@ -54,9 +62,7 @@ crawler/
 
 **Requirements:** Python 3.7 or higher. No `pip install` needed.
 
-```bash
-python main.py
-```
+    python main.py
 
 Then open your browser at: **http://localhost:3600**
 
@@ -88,41 +94,23 @@ Use **Previous** / **Next** to page through results. Click **✕ Close** to retu
 
 ---
 
-## Technical Constraints (by design)
-
-This project was built with zero external dependencies to demonstrate core CS concepts:
-
-- **No Scrapy / BeautifulSoup** — uses Python's built-in `html.parser`
-- **No requests / httpx** — uses `urllib.request` directly
-- **No SQLite / Redis** — uses a custom sharded flat-file database in `storage/`
-- **No Flask / FastAPI** — uses `http.server` from the standard library
-- **No React / Vue** — pure HTML, CSS, and vanilla JavaScript
-
----
-
 ## Storage Design
 
 ### Word Index (`storage/`)
 Each word is stored in a shard file named after its first letter:
-```
-storage/a.data  →  words starting with 'a'
-storage/p.data  →  words starting with 'p'
-...
-```
+
+    storage/a.data  →  words starting with 'a'
+    storage/p.data  →  words starting with 'p'
+    ...
+
 Each line is a JSON record:
-```json
-{ "word": "python", "current_url": "...", "origin_url": "...", "depth": 1, "frequency": 7 }
-```
+
+    { "word": "python", "current_url": "...", "origin_url": "...", "depth": 1, "frequency": 7 }
+
 
 ### Job Logs (`logs/`)
 Each crawler job produces one file:
-```
-logs/1711224000_140234567890.data
-```
+
+    logs/1711224000_140234567890.data
+
 This file stores status, progress counters, the last 50 event log entries, and the full queue/visited snapshot for resume support.
-
----
-
-## Authors
-
-Built for ITU AI Aided Computer Engineering — "Google in One Day" project.
