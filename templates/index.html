@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brightwave Control Center</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --sidebar: #ffffff;
+      --primary: #2563eb;
+      --text: #1f2937;
+      --border: #e5e7eb;
+      --terminal-bg: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      display: flex;
+      background: var(--bg);
+      height: 100vh;
+      overflow: hidden;
+      color: var(--text);
+    }
+
+    /* --- Sidebar: Controls & Search --- */
+    .sidebar {
+      width: 420px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 1.5rem;
+      gap: 1.25rem;
+      box-shadow: 4px 0 15px rgba(0, 0, 0, 0.03);
+      z-index: 20;
+    }
+
+    .form-section {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+    }
+
+    .form-section h3 {
+      margin: -1.25rem -1.25rem 1rem -1.25rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #111827;
+      background: #f1f5f9;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0.75rem 0.75rem 0 0;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .form-group {
+      margin-bottom: 0.75rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.4rem;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    button.btn-primary {
+      width: 100%;
+      padding: 0.85rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button.btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    /* --- Main Content Area --- */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .top-bar {
+      background: #fff;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-val {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+    }
+
+    .main-grid {
+      padding: 2rem;
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      gap: 2rem;
+    }
+
+    #dashViews {
+      flex: 1;
+      overflow-y: auto;
+      min-width: 0;
+      padding-right: 0.5rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #374151;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    /* --- Crawler Cards --- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-id {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .running {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .completed {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .paused {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .card-url {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #111827;
+      word-break: break-all;
+    }
+
+    .card-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      background: #f9fafb;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+    }
+
+    .stat-col span {
+      display: block;
+    }
+
+    .stat-col span:first-child {
+      font-size: 0.6rem;
+      color: #9ca3af;
+      text-transform: uppercase;
+    }
+
+    .stat-col span:last-child {
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 0.4rem;
+      border-radius: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .btn-action:hover {
+      background: #f3f4f6;
+    }
+
+    .btn-stop {
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+
+    /* --- Search Results --- */
+    .search-container {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 0.75rem;
+      border: 1px solid var(--primary);
+      padding: 1.5rem;
+      display: none;
+    }
+
+    /* --- Terminal Panel (Right) --- */
+    .terminal {
+      width: 340px;
+      background: var(--terminal-bg);
+      border-left: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      color: #f8fafc;
+    }
+
+    .term-header {
+      padding: 1rem 1.5rem;
+      background: #020617;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .term-header h4 {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      font-family: monospace;
+    }
+
+    .term-body {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .term-line {
+      margin-bottom: 0.3rem;
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .term-ts {
+      color: #6366f1;
+      white-space: nowrap;
+    }
+
+    .term-msg {
+      color: #e2e8f0;
+      word-break: break-all;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #9ca3af;
+      font-size: 0.85rem;
+      border: 1px dashed var(--border);
+      border-radius: 0.75rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <div class="form-section">
+      <h3>🚀 Start Crawler</h3>
+      <form id="spawnForm" onsubmit="event.preventDefault(); spawnJob();">
+        <div class="form-group"><label>Origin URL</label><input id="url" type="url" placeholder="https://wikipedia.org"
+            required></div>
+        <div class="form-group"><label>Max Depth</label><input id="depth" type="number" value="3" min="1"></div>
+        <div class="form-group"><label>Hit Rate (/sec)</label><input id="rate" type="number" step="0.1" value="1.0">
+        </div>
+        <div class="form-group"><label>Max URLs to Visit</label><input id="maxUrls" type="number" value="100"></div>
+        <div class="form-group"><label>Queue Capacity</label><input id="qCap" type="number" value="10000"></div>
+        <button type="submit" class="btn-primary">Start Crawler Job</button>
+      </form>
+    </div>
+
+    <div class="form-section">
+      <h3>🔍 Search Index</h3>
+      <input id="searchQ" type="text" placeholder="Enter keywords..." list="autoList"
+        oninput="fetchAutoComplete(this.value)" onkeyup="if(event.key==='Enter') doSearch(false)">
+      <datalist id="autoList"></datalist>
+      <button class="btn-primary" style="margin-top: 0.5rem; background: #6366f1;" onclick="doSearch(false)">Search
+        Engine</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="top-bar">
+      <div class="stat-item"><span class="stat-val" id="statWords">0</span><span class="stat-label">Indexed Words</span>
+      </div>
+      <div class="stat-item"><span class="stat-val" id="statActive">0</span><span class="stat-label">Active Jobs</span>
+      </div>
+      <div class="stat-item"><span class="stat-val" id="statHistory">0</span><span class="stat-label">Total
+          History</span></div>
+    </header>
+
+    <div class="main-grid" id="mainScroll">
+      <div id="searchResults" class="search-container"></div>
+
+      <div id="dashViews">
+        <h4 class="section-title">⚡ Running Now</h4>
+        <div class="grid" id="gridActive" style="margin-bottom: 2rem; margin-top: 1rem;"></div>
+
+        <h4 class="section-title">📂 Historical Records</h4>
+        <div class="grid" id="gridHistory" style="margin-top: 1rem;"></div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="terminal">
+    <div class="term-header">
+      <h4 id="termTitle">TERMINAL: OFFLINE</h4>
+    </div>
+    <div class="term-body" id="termBody">
+      <div class="empty-state" style="border:none; margin-top: 40%;">Select a crawler to view technical events</div>
+    </div>
+  </aside>
+
+  <script>
+    let activeId = null;
+    let poller = null;
+    let knownOrigins = new Set();
+    let currentSearchQ = "";
+    let searchOffset = 0;
+    const PAGE_LIMIT = 10;
+
+    async function refreshDashboard() {
+      try {
+        const res = await fetch('/api/dashboard');
+        const data = await res.json();
+
+        document.getElementById('statWords').innerText = data.global_metrics.total_words.toLocaleString();
+        document.getElementById('statActive').innerText = data.global_metrics.active_jobs;
+        document.getElementById('statHistory').innerText = data.global_metrics.total_jobs;
+
+        const jobs = Object.values(data.jobs).sort((a, b) => b.crawler_id.localeCompare(a.crawler_id));
+
+        knownOrigins.clear();
+        jobs.forEach(j => {
+          if (j.origin_url) knownOrigins.add(j.origin_url.trim());
+        });
+
+        const active = jobs.filter(j => j.status === 'running' || j.status === 'paused');
+        const history = jobs.filter(j => j.status !== 'running' && j.status !== 'paused');
+
+        renderGrid('gridActive', active);
+        renderGrid('gridHistory', history);
+      } catch (e) { }
+    }
+
+    function renderGrid(elementId, jobs) {
+      const container = document.getElementById(elementId);
+      if (jobs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No jobs in this category.</div>';
+        return;
+      }
+      container.innerHTML = jobs.map(buildCard).join('');
+    }
+
+    function buildCard(job) {
+      const urlTitle = job.origin_url || "Unknown URL";
+      const processed = job.processed || 0;
+      const words = job.words || 0;
+      const queueSize = job.queue_size !== undefined ? job.queue_size : "—";
+      const status = job.status || "pending";
+      const cid = job.crawler_id;
+
+      let actions = '';
+      if (status === 'running') {
+        actions = `<button class="btn-action btn-warn" onclick="event.stopPropagation(); ctrl('pause', '${cid}')">Pause</button>
+                     <button class="btn-action btn-stop" onclick="event.stopPropagation(); confirmStop('${cid}')">Stop</button>`;
+      } else if (status === 'paused') {
+        actions = `<button class="btn-action btn-success" onclick="event.stopPropagation(); ctrl('resume', '${cid}')">▶ Resume</button>
+                     <button class="btn-action btn-stop" onclick="event.stopPropagation(); confirmStop('${cid}')">Stop</button>`;
+      } else if (status === 'stopped') {
+        actions = `<button class="btn-action btn-success" style="flex:1" onclick="event.stopPropagation(); confirmResume('${cid}')">↺ Resume</button>
+                   <button class="btn-action btn-delete" style="flex:1" onclick="event.stopPropagation(); confirmDelete('${cid}')">Delete</button>`;
+      } else {
+        actions = `<button class="btn-action btn-delete" style="flex:2" onclick="event.stopPropagation(); confirmDelete('${cid}')">Delete Record</button>`;
+      }
+
+      return `
+        <div class="card" onclick="openTerminal('${cid}')">
+          <div class="card-header">
+            <span class="card-id">#${cid.split('_')[0]}</span>
+            <span class="badge ${status}">${status}</span>
+          </div>
+          <div class="card-url" title="${urlTitle}">${urlTitle}</div>
+          <div class="card-stats">
+            <div class="stat-col"><span>Processed</span><span>${processed.toLocaleString()}</span></div>
+            <div class="stat-col"><span>Words</span><span>${words.toLocaleString()}</span></div>
+            <div class="stat-col"><span>Queue</span><span>${queueSize}</span></div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-action" onclick="event.stopPropagation(); openTerminal('${cid}')">View Status</button>
+            ${actions}
+          </div>
+        </div>
+      `;
+    }
+
+    async function spawnJob() {
+      const originUrl = document.getElementById('url').value.trim();
+
+      if (knownOrigins.has(originUrl)) {
+        alert("Warning: This URL has already been crawled or is currently in the process.");
+        return;
+      }
+
+      const body = {
+        url: originUrl,
+        depth: document.getElementById('depth').value,
+        hit_rate: document.getElementById('rate').value,
+        max_urls: document.getElementById('maxUrls').value,
+        queue_capacity: document.getElementById('qCap').value
+      };
+      await fetch('/api/spawn', { method: 'POST', body: JSON.stringify(body) });
+      refreshDashboard();
+    }
+
+    async function ctrl(cmd, id) {
+      try {
+        const res = await fetch(`/api/${cmd}/${encodeURIComponent(id)}`, { method: 'POST' });
+        if (res.ok) {
+          alert(`${cmd.toUpperCase()} command sent successfully.`);
+          refreshDashboard();
+        }
+      } catch (e) { console.error(`Failed to ${cmd}:`, e); }
+    }
+
+    async function confirmStop(id) {
+      if (!confirm("Are you sure you want to stop this crawler?\n\nProgress will be saved and you can resume from where it left off.")) return;
+      await fetch(`/api/stop/${encodeURIComponent(id)}`, { method: 'POST' });
+      refreshDashboard();
+    }
+
+    async function confirmDelete(id) {
+      if (!confirm("Permanently delete this record?")) return;
+      await fetch(`/api/logs/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (activeId === id) {
+        activeId = null;
+        document.getElementById('termBody').innerHTML = '<div class="empty-state" style="border:none; margin-top: 40%;">Select a crawler to view technical events</div>';
+        document.getElementById('termTitle').innerText = "TERMINAL: OFFLINE";
+        if (poller) clearInterval(poller);
+      }
+      refreshDashboard();
+    }
+
+    async function confirmResume(id) {
+      if (!confirm("Resume this crawler from where it left off?\n\nAlready-visited pages will be skipped. Crawling will continue from the saved queue.")) return;
+      const res = await fetch(`/api/resume/${encodeURIComponent(id)}`, { method: 'POST' });
+      if (res.ok) {
+        refreshDashboard();
+      } else {
+        alert("Could not resume this job. The saved queue may be empty or the record is corrupt.");
+      }
+    }
+
+    function openTerminal(id) {
+      activeId = id;
+      document.getElementById('termTitle').innerText = "TERMINAL: " + id.split('_')[0];
+      fetchLogs();
+      if (poller) clearInterval(poller);
+      poller = setInterval(fetchLogs, 1500);
+    }
+
+    async function fetchLogs() {
+      if (!activeId) return;
+      const res = await fetch(`/api/logs/${activeId}`);
+      const data = await res.json();
+      const body = document.getElementById('termBody');
+
+      const newContent = (data.events || []).map(e => {
+        const parts = e.split(' - ');
+        return `<div class="term-line"><span class="term-ts">[${parts[0]}]</span><span class="term-msg">${parts[1] || ''}</span></div>`;
+      }).join('');
+
+      if (body.innerHTML !== newContent) {
+        body.innerHTML = newContent;
+        body.scrollTop = body.scrollHeight;
+      }
+    }
+
+    async function doSearch(isPagination = false) {
+      if (!isPagination) {
+        currentSearchQ = document.getElementById('searchQ').value;
+        searchOffset = 0;
+      }
+
+      const q = currentSearchQ;
+      if (!q) return;
+
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&offset=${searchOffset}&limit=${PAGE_LIMIT}`);
+      const data = await res.json();
+
+      const container = document.getElementById('searchResults');
+      container.style.display = 'block';
+
+      let resultsHtml = data.results.map(r => `
+          <div style="padding:1rem; border-bottom:1px solid #eee">
+            <a href="${r.url}" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:none">${r.url}</a>
+            <div style="font-size:0.75rem; color:#666">Origin: ${r.origin} | Depth: ${r.depth} | Frequency: ${r.frequency}</div>
+          </div>
+        `).join('');
+
+      if (!resultsHtml) {
+        resultsHtml = '<div class="empty-state">No matches found.</div>';
+      }
+
+      let paginationHtml = '';
+      if (data.total > PAGE_LIMIT) {
+        const hasPrev = searchOffset > 0;
+        const hasNext = searchOffset + PAGE_LIMIT < data.total;
+
+        const prevBtn = hasPrev ? `<button class="btn-action" style="width: auto; padding: 0.4rem 1rem;" onclick="paginateSearch(-1)">Previous</button>` : '';
+        const nextBtn = hasNext ? `<button class="btn-action" style="width: auto; padding: 0.4rem 1rem;" onclick="paginateSearch(1)">Next</button>` : '';
+
+        paginationHtml = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 1rem 0; border-top: 1px solid #eee;">
+            <div>${prevBtn}</div>
+            <div style="font-size: 0.8rem; color: #666; font-weight: 600;">Page ${Math.floor(searchOffset / PAGE_LIMIT) + 1} of ${Math.ceil(data.total / PAGE_LIMIT)}</div>
+            <div>${nextBtn}</div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; gap: 0.5rem;">` +
+        `<div style="color: #9ca3af; font-size: 0.85rem; flex: 1;">About ${data.total || 0} Results (${q})</div>` +
+        `<button class="btn-action" style="width: auto; padding: 0.1rem 0.4rem; font-size: 0.65rem; color: #dc2626; border-color: #fecaca; background: #fee2e2; flex-shrink: 0;" onclick="exitSearch()">✕ Close</button></div>` +
+        `<h4 class="section-title">Results for "${q}"</h4>` +
+        resultsHtml + paginationHtml;
+    }
+
+    function paginateSearch(direction) {
+      if (direction === -1) searchOffset = Math.max(0, searchOffset - PAGE_LIMIT);
+      if (direction === 1) searchOffset += PAGE_LIMIT;
+      doSearch(true);
+    }
+
+    function exitSearch() {
+      document.getElementById('searchResults').style.display = 'none';
+    }
+
+    let autocompleteTimeout = null;
+    function fetchAutoComplete(val) {
+      if (val.trim().length < 2) {
+        document.getElementById('autoList').innerHTML = '';
+        return;
+      }
+      clearTimeout(autocompleteTimeout);
+      autocompleteTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(val)}`);
+          const data = await res.json();
+          document.getElementById('autoList').innerHTML = (data.suggestions || []).map(s => `<option value="${s}">`).join('');
+        } catch (e) { }
+      }, 200);
+    }
+
+    setInterval(refreshDashboard, 2000);
+    refreshDashboard();
+  </script>
+</body>
+
+</html>
