@@ -194,7 +194,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         offset = int(params.get("offset", ["0"])[0])
 
         total, raw_results = searcher.search(q, limit=limit, offset=offset)
-        results = [{"url": r[0], "origin": r[1], "depth": r[2], "frequency": r[3]} for r in raw_results]
+        results = [{"url": r[0], "origin": r[1], "depth": r[2], "frequency": r[3], "relevance_score": r[4]} for r in raw_results]
         self._send_json({"results": results, "total": total})
 
     def _handle_api_autocomplete(self, query_str: str) -> None:

@@ -603,7 +603,7 @@
       let resultsHtml = data.results.map(r => `
           <div style="padding:1rem; border-bottom:1px solid #eee">
             <a href="${r.url}" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:none">${r.url}</a>
-            <div style="font-size:0.75rem; color:#666">Origin: ${r.origin} | Depth: ${r.depth} | Frequency: ${r.frequency}</div>
+            <div style="font-size:0.75rem; color:#666">Origin: ${r.origin} | Depth: ${r.depth} | Frequency: ${r.frequency} | Score: ${r.relevance_score}</div>
           </div>
         `).join('');
 

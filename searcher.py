@@ -42,19 +42,9 @@ class Searcher:
         query: str,
         limit: int = 10,
         offset: int = 0,
-    ) -> tuple[int, list[tuple[str, str, int, int]]]:
+    ) -> tuple[int, list[tuple[str, str, int, int, int]]]:
         """
         Search for all words in *query* and return ranked, paginated results.
-
-        Algorithm:
-          1. Tokenize query into words.
-          2. For each word, scan its shard file for matching entries.
-          3. Merge duplicate (word, url) pairs keeping highest frequency and shallowest depth.
-          4. Sort by frequency descending, then depth ascending.
-          5. Apply offset/limit pagination.
-
-        Returns:
-            (total_count, [(current_url, origin_url, depth, frequency), ...])
         """
         query_words = self._tokenise(query)
         if not query_words:
@@ -75,10 +65,18 @@ class Searcher:
                     if entry["depth"] < existing["depth"]:
                         existing["depth"] = entry["depth"]
 
-        ranked = sorted(aggregated.values(), key=lambda e: (-e["frequency"], e["depth"]))
+        # relevance_score calculation
+        for entry in aggregated.values():
+            freq = entry["frequency"]
+            depth = entry["depth"]
+            # 1000 = exact match bonus
+            entry["relevance_score"] = (freq * 10) + 1000 - (depth * 5)
+
+        # Sort relevance_score from highest to lowest
+        ranked = sorted(aggregated.values(), key=lambda e: e["relevance_score"], reverse=True)
         page = list(itertools.islice(ranked, offset, offset + limit))
 
-        return len(ranked), [(e["current_url"], e["origin_url"], e["depth"], e["frequency"]) for e in page]
+        return len(ranked), [(e["current_url"], e["origin_url"], e["depth"], e["frequency"], e["relevance_score"]) for e in page]
 
     def autocomplete(self, prefix: str, limit: int = 5) -> list[str]:
         """Return up to *limit* indexed words that start with *prefix*."""
